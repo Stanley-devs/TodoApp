@@ -50,7 +50,10 @@ jobs:
     - name: Deploy to kind
       run: |
         # Pull image from Docker Hub on the server side
-        kubectl apply -f k8s/ --exclude=kind-config.yaml
+        kubectl apply -f k8s/configmap.yml
+        kubectl apply -f k8s/secret.yml
+        kubectl apply -f k8s/deployment.yml
+        kubectl apply -f k8s/service.yml
         kubectl rollout status deployment/todoapp-deployment --timeout=90s
     - name: Verify deployment
       run: |
