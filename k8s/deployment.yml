@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todoapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todoapp
+  template:
+    metadata:
+      labels:
+        app: todoapp
+    spec:
+      containers:
+      - name: todoapp
+        image: stano254/todoapp:latest
+        imagePullPolicy: Always  # Ensure fresh pulls
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: todoapp-config
+        - secretRef:
+            name: todoapp-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"

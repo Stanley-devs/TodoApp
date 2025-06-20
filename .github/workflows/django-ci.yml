@@ -1,0 +1,59 @@
+name: Django CI/CD with Docker Hub and kind
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  DOCKER_IMAGE: stano254/todoapp
+  KUBECONFIG: ${{ github.workspace }}/kubeconfig
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - run: |
+        pip install -r requirements.txt
+        python manage.py test
+
+  build-push:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}:latest
+
+  deploy-to-kind:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up kind
+      uses: helm/kind-action@v1.7.0
+      with:
+        config: kind-config.yaml
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+    - name: Deploy to kind
+      run: |
+        # Pull image from Docker Hub on the server side
+        kubectl apply -f k8s/
+        kubectl rollout status deployment/todoapp-deployment --timeout=90s
+    - name: Verify deployment
+      run: |
+        kubectl get pods
+        kubectl get svc
+        echo "Access the app at: http://localhost:8000"
