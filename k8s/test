@@ -1,0 +1,19 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraMounts:
+      - hostPath: /sys/fs/cgroup
+        containerPath: /sys/fs/cgroup
+  - role: worker
+    extraMounts:
+      - hostPath: /sys/fs/cgroup
+        containerPath: /sys/fs/cgroup
+  - role: worker
+    extraMounts:
+      - hostPath: /sys/fs/cgroup
+        containerPath: /sys/fs/cgroup
+containerdConfigPatches:
+  - |
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
