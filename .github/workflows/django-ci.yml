@@ -63,3 +63,8 @@ jobs:
 
         echo "📡 Testing access to: http://$KIND_IP:$NODE_PORT"
         curl --fail http://$KIND_IP:$NODE_PORT || (echo "❌ App not reachable!" && exit 1)
+    - name: Force rollout to refresh image
+      run: |
+        kubectl rollout restart deployment todoapp-deployment
+        kubectl rollout status deployment todoapp-deployment
+
