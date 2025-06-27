@@ -61,6 +61,9 @@ jobs:
       - name: ✅ Confirm Pod Running
         run: kubectl get pods -l app=todoapp
 
+      - name: 🩺 Debug pod logs
+        run: kubectl logs -l app=todoapp --tail=50
+
       - name: 🌍 Test Localhost and LAN Accessibility
         run: |
           sleep 60
