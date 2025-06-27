@@ -40,7 +40,7 @@ jobs:
 
   deploy:
     needs: ci-cd
-    runs-on: [self-hosted, linux, secondary-laptop]
+    runs-on: [self-hosted, linux, ubuntuserver]
     steps:
       - name: 🔄 Checkout Code
         uses: actions/checkout@v3
