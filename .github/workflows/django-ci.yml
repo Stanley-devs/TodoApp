@@ -7,64 +7,64 @@ on:
 env:
   DOCKER_IMAGE: stano254/todoapp
   KUBECONFIG: ${{ github.workspace }}/kubeconfig
+  NODE_PORT: 30080
 
 jobs:
   ci-cd:
     runs-on: ubuntu-latest
     steps:
-    - name: 🔄 Checkout Code
-      uses: actions/checkout@v3
+      - name: 🔄 Checkout Code
+        uses: actions/checkout@v3
 
-    - name: 🐍 Set Up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: 🐍 Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: 📦 Install Dependencies & Run Tests
-      run: |
-        pip install -r requirements.txt
-        python manage.py test
+      - name: 📦 Install Dependencies & Run Tests
+        run: |
+          pip install -r requirements.txt
+          python manage.py test
 
-    - name: 🔐 Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-    - name: 🐳 Build and Push Docker Image
-      uses: docker/build-push-action@v4
-      with:
-        push: true
-        tags: ${{ env.DOCKER_IMAGE }}:latest
+      - name: 🐳 Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:latest
 
-    - name: 🧱 Set Up Kind Cluster
-      uses: helm/kind-action@v1.7.0
-      with:
-        config: kind-config.yaml  # optional, omit if not using custom config
+  deploy:
+    needs: ci-cd
+    runs-on: [self-hosted, linux, secondary-laptop]
+    steps:
+      - name: 🔄 Checkout Code
+        uses: actions/checkout@v3
 
-    - name: ⚙️ Install kubectl
-      uses: azure/setup-kubectl@v3
+      - name: ⚙️ Load Kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
 
-    - name: 🚀 Deploy to Kubernetes
-      run: |
-        kubectl apply -f k8s/configmap.yml || true
-        kubectl apply -f k8s/deployment.yml
-        kubectl apply -f k8s/service.yml
-        kubectl rollout status deployment/todoapp-deployment --timeout=90s
+      - name: 🔄 Restart Deployment to Pull Latest Image
+        run: |
+          kubectl rollout restart deployment todoapp-deployment
+          kubectl rollout status deployment/todoapp-deployment --timeout=90s
 
-    - name: 🔍 Verify Application Is Running
-      run: |
-        echo "⏳ Waiting for service to be ready..."
-        sleep 10
+      - name: ✅ Confirm Pod Running
+        run: kubectl get pods -l app=todoapp
 
-        NODE_PORT=$(kubectl get service todoapp-service -o=jsonpath='{.spec.ports[0].nodePort}')
-        KIND_NODE=$(docker ps --filter "name=control-plane" --format "{{.Names}}")
-        KIND_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $KIND_NODE)
+      - name: 🌍 Test Localhost and LAN Accessibility
+        run: |
+          sleep 10
+          echo "Testing on secondary laptop:"
+          curl --fail http://localhost:${{ env.NODE_PORT }} || (echo "❌ Localhost unreachable" && exit 1)
 
-        echo "📡 Testing access to: http://$KIND_IP:$NODE_PORT"
-        curl --fail http://$KIND_IP:$NODE_PORT || (echo "❌ App not reachable!" && exit 1)
-    - name: Force rollout to refresh image
-      run: |
-        kubectl rollout restart deployment todoapp-deployment
-        kubectl rollout status deployment todoapp-deployment
+          # Get host's LAN IP
+          HOST_IP=$(hostname -I | awk '{print $1}')
+          echo "📡 Try accessing from primary at: http://$HOST_IP:${{ env.NODE_PORT }}"
 

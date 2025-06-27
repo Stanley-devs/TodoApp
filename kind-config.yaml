@@ -5,8 +5,7 @@ nodes:
   # Port mappings for local access
   extraPortMappings:
   - containerPort: 30080    # Matches service nodePort
-    hostPort: 8000          # Access at localhost:8000
-    protocol: TCP
+    hostPort: 30080          # Access at localhost:8000
     listenAddress: "0.0.0.0"
 
   # Extra mounts (for persistent storage if needed)
