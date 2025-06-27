@@ -63,11 +63,11 @@ jobs:
 
       - name: 🌍 Test Localhost and LAN Accessibility
         run: |
-          sleep 10
+          sleep 60
+          kubectl get pods -o wide
+          kubectl get svc
           echo "Testing on secondary laptop:"
           curl --fail http://localhost:${{ env.NODE_PORT }} || (echo "❌ Localhost unreachable" && exit 1)
-
-          # Get host's LAN IP
           HOST_IP=$(hostname -I | awk '{print $1}')
           echo "📡 Try accessing from primary at: http://$HOST_IP:${{ env.NODE_PORT }}"
 
