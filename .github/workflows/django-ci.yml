@@ -57,6 +57,19 @@ jobs:
         kubectl rollout status deployment/todoapp-deployment --timeout=90s
     - name: Verify deployment
       run: |
-        kubectl get pods
-        kubectl get svc
-        echo "Access the app at: http://localhost:8000"
+          kubectl get pods
+          kubectl get svc
+          
+          # Wait a few seconds to ensure pod is up
+          sleep 10
+          
+          # Port-forward and test the service
+          kubectl port-forward svc/todoapp-service 8000:8000 &
+          PORT_FORWARD_PID=$!
+          sleep 5  # wait for port-forward to establish
+          
+          # Test the app
+          curl -f http://localhost:8000 || (echo "App not reachable" && exit 1)
+          
+          # Clean up background port-forward
+          kill $PORT_FORWARD_PID
