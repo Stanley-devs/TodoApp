@@ -18,11 +18,6 @@ spec:
         imagePullPolicy: Always  # Ensure fresh pulls
         ports:
         - containerPort: 8000
-        envFrom:
-        - configMapRef:
-            name: todoapp-config
-        - secretRef:
-            name: todoapp-secret
         resources:
           requests:
             cpu: "100m"
