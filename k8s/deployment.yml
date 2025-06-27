@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: todoapp-deployment
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: todoapp
@@ -27,3 +27,5 @@ spec:
           requests:
             cpu: "100m"
             memory: "128Mi"
+      imagePullSecrets:
+        - name: dockerhub-creds
