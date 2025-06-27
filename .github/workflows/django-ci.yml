@@ -66,11 +66,13 @@ jobs:
 
       - name: 🌍 Test Localhost and LAN Accessibility
         run: |
-          sleep 60
+          sleep 120  # Increase wait time
           kubectl get pods -o wide
           kubectl get svc
+          # Wait for pod readiness
+          kubectl wait --for=condition=ready pod -l app=todoapp --timeout=120s
           echo "Testing on secondary laptop:"
-          curl --fail http://localhost:${{ env.NODE_PORT }} || (echo "❌ Localhost unreachable" && exit 1)
+          curl --fail http://localhost:${{ env.NODE_PORT }} || (kubectl logs -l app=todoapp --tail=50 && echo "❌ Localhost unreachable" && exit 1)
           HOST_IP=$(hostname -I | awk '{print $1}')
           echo "📡 Try accessing from primary at: http://$HOST_IP:${{ env.NODE_PORT }}"
 
