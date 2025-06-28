@@ -61,7 +61,7 @@ jobs:
       - name: 🔄 Restart Deployment to Pull Latest Image
         run: |
           kubectl rollout restart deployment todoapp-deployment
-          kubectl rollout status deployment/todoapp-deployment --timeout=90s
+          kubectl rollout status deployment/todoapp-deployment --timeout=120s
 
       - name: ✅ Confirm Pod Running
         run: kubectl get pods -l app=todoapp
