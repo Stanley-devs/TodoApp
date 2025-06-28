@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+import datetime
 from pathlib import Path
 
 
@@ -132,6 +133,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
+
+
+print(f"🚀 Django app started at {datetime.datetime.now().isoformat()} — Code version updated.")
 
 # # Security settings for production
 # if not DEBUG:

@@ -53,6 +53,11 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
+      - name: 🚀 Apply K8s Manifests
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl apply -f k8s/service.yml
+
       - name: 🔄 Restart Deployment to Pull Latest Image
         run: |
           kubectl rollout restart deployment todoapp-deployment
@@ -66,13 +71,13 @@ jobs:
 
       - name: 🌍 Test Localhost and LAN Accessibility
         run: |
-          sleep 120  # Increase wait time
+          sleep 120
           kubectl get pods -o wide
           kubectl get svc
-          # Wait for pod readiness
           kubectl wait --for=condition=ready pod -l app=todoapp --timeout=120s
           echo "Testing on secondary laptop:"
           curl --fail http://localhost:${{ env.NODE_PORT }} || (kubectl logs -l app=todoapp --tail=50 && echo "❌ Localhost unreachable" && exit 1)
           HOST_IP=$(hostname -I | awk '{print $1}')
           echo "📡 Try accessing from primary at: http://$HOST_IP:${{ env.NODE_PORT }}"
+
 
