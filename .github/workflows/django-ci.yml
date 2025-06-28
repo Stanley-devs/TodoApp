@@ -65,8 +65,9 @@ jobs:
           kubectl apply -f k8s/service.yml
           
           echo "⏳ Waiting for pods to be ready..."
-          kubectl rollout status deployment/todoapp-deployment --timeout=3600s
-          kubectl wait --for=condition=ready pod -l app=todoapp --timeout=3600s
+          kubectl rollout status deployment/todoapp-deployment --timeout=120s
+          kubectl wait --for=condition=ready pod -l app=todoapp --timeout=120s
+          kubectl get pods -l app=todoapp -o name | xargs -n1 kubectl logs
       
 
       - name: ✅ Confirm Pod Running
