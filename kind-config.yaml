@@ -1,19 +1,11 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+name: todoapp-cluster
 nodes:
-- role: control-plane
-  # Port mappings for local access
-  extraPortMappings:
-  - containerPort: 30080    # Matches service nodePort
-    hostPort: 30080          # Access at localhost:8000
-    listenAddress: "0.0.0.0"
-
-  # Extra mounts (for persistent storage if needed)
-  extraMounts:
-  - hostPath: ./persistent-data
-    containerPath: /data
-    readOnly: false
-
-# Enable ingress if needed (optional)
-# networking:
-#   ingressClass: "nginx"
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+  - role: worker
+  - role: worker
