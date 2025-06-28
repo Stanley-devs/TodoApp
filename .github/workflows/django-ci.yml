@@ -53,16 +53,25 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
-      - name: 🚀 Apply K8s Manifests
+      - name: 🔁 Recreate Deployment and Service
         run: |
+          set -e
+          echo "🧹 Deleting old deployment and service if they exist..."
+          kubectl delete deployment todoapp-deployment --ignore-not-found
+          kubectl delete svc todoapp-service --ignore-not-found
+          
+          echo "🚀 Applying new deployment and service..."
           kubectl apply -f k8s/deployment.yml
           kubectl apply -f k8s/service.yml
+          
+          echo "⏳ Waiting for pods to be ready..."
+          kubectl rollout status deployment/todoapp-deployment --timeout=120s
+          kubectl wait --for=condition=ready pod -l app=todoapp --timeout=120s
+      
 
-      - name: 🔄 Restart Deployment to Pull Latest Image
-        run: |
-          kubectl rollout restart deployment todoapp-deployment
       - name: ✅ Confirm Pod Running
         run: kubectl get pods -l app=todoapp
+
 
       - name: 🌍 Test Localhost and LAN Accessibility
         run: |
